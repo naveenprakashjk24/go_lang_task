@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"strconv"
 
+	taskdata "github.com/naveenprakashjk24/go_lang_task"
+
 	"github.com/gorilla/mux"
-	domain "github.com/naveenprakashjk24/go_lang_task"
 )
 
 type UserInput struct{}
@@ -24,13 +25,13 @@ func (handler *UserInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		panic(err)
 	}
-	inputCollection := domain.ProcessJsonInput(body)
+	inputCollection := taskdata.ProcessJsonInput(body)
 	if len(inputCollection) <= 0 {
 		http.Error(w, "{\"error\": \"empty input list submitted.\"}", 500)
 		return
 	}
 
-	inputMap := make(map[int]domain.InputData)
+	inputMap := make(map[int]taskdata.InputData)
 	for k, v := range inputCollection {
 		inputMap[k] = v
 	}
@@ -39,11 +40,11 @@ func (handler *UserInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	numberOfWorkers := 100
 
 	//Buffered chanels
-	jobs := make(chan domain.InputData, 1000)     //Chanel to send in the jobs
-	results := make(chan domain.OutputData, 1000) //Chanel to receive job results
+	jobs := make(chan taskdata.InputData, 1000)     //Chanel to send in the jobs
+	results := make(chan taskdata.OutputData, 1000) //Chanel to receive job results
 
 	for w := 1; w <= numberOfWorkers; w++ {
-		go domain.NewWorker(jobs, results)
+		go taskdata.NewWorker(jobs, results)
 	}
 
 	for j := 0; j <= numberOfJobs-1; j++ {
@@ -54,7 +55,7 @@ func (handler *UserInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	close(jobs)
 
 	//The res map will be used to collect results of our workers...
-	res := make(map[int]domain.OutputData)
+	res := make(map[int]taskdata.OutputData)
 
 	//Collect worker results
 	for a := 0; a <= numberOfJobs-1; a++ {
@@ -68,7 +69,7 @@ func (handler *UserInput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	//Create json with all results...
-	response, err := domain.GenerateJsonOutput(res)
+	response, err := taskdata.GenerateJsonOutput(res)
 	if err != nil {
 		log.Println(err)
 		panic(err)

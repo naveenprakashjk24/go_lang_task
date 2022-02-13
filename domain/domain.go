@@ -1,8 +1,9 @@
-package domain
+package taskdata
 
 import (
 	"encoding/json"
 	"log"
+	"sort"
 )
 
 type InputData struct {
@@ -122,6 +123,23 @@ func ProcessJsonInput(inputuserData []byte) []InputData {
 
 	}
 	return collection
+}
+
+func GenerateJsonOutput(output map[int]OutputData) ([]byte, error) {
+	//The Output is not sorted by index.
+	//We sort it by Index prior to returning the response
+	sorted := make([]OutputData, len(output))
+	keys := make([]int, len(output))
+
+	for k, _ := range output {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	for _, k := range keys {
+		sorted[k] = output[k]
+	}
+	return json.Marshal(sorted)
 }
 
 func addInput(thing json.RawMessage, collection []InputData) []InputData {
